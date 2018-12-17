@@ -30,6 +30,8 @@ class AlertLimitAdapter(Adapter):
      def _encode(self, value):
          v = (value * 4) << 2
          v = struct.pack('>h', v)
+         v = (ord(v[0]) << 8) | ord(v[1])
+         return v
 
 
 class S16Adapter(Adapter):
@@ -238,14 +240,14 @@ class MCP9600:
         register = self.alert_registers[index - 1]
         register.set_clear_interrupt(1)
 
-    def configure_alert(self, index, limit=0, hysteresis=0, clear_interrupt=True, monitor_junction=1, rise_fall=1, state=1, mode=1, enable=False):
+    def configure_alert(self, index, limit=None, hysteresis=None, clear_interrupt=True, monitor_junction=0, rise_fall=1, state=1, mode=1, enable=False):
         """Set up one of the 4 alert slots.
 
         :param index: Index of alert to set, from 1 to 4
         :param limit: Temperature limit
         :param hysteresis: Temperature hysteresis
         :param clear_interrupt: Whether to clear the interrupt flag
-        :param monitor_junction: Which junction to monitor: 1 = HOT, 0 = COLD
+        :param monitor_junction: Which junction to monitor: 0 = HOT, 1 = COLD
         :param rise_fall: Monitor for 1=rising or 0=falling temperature
         :param state: Active 1=high or 0=low
         :param mode: 1=Interrupt mode, must clear interrupt to de-assert, 0=Comparator mode
@@ -253,8 +255,14 @@ class MCP9600:
 
         """
         alert_register = self.alert_registers[index - 1]
-        alert_limit = self.alert_limits[index - 1]
-        alert_hysteresis = self.alert_hysteresis[index - 1]
+
+        if limit is not None:
+            alert_limit = self.alert_limits[index - 1]
+            alert_limit.set_value(limit)
+
+        if hysteresis is not None:
+            alert_hysteresis = self.alert_hysteresis[index - 1]
+            alert_hysteresis.set_value(hysteresis)
 
         with alert_register as alert:
             if clear_interrupt:
