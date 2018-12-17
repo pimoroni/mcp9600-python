@@ -3,9 +3,24 @@ import time
 
 m = mcp9600.MCP9600()
 
+for x in range(1, 5):
+    m.clear_alert(x)
+    m.configure_alert(x, enable=False)
+
+m.configure_alert(1, monitor_junction=0, limit=40, mode=1, enable=True)
+m.configure_alert(2, monitor_junction=0, limit=40, mode=1, enable=True, rise_fall=0)
+
 while True:
-    t = m._mcp9600.HOT_JUNCTION.get_temperature()
-    c = m._mcp9600.COLD_JUNCTION.get_temperature()
-    d = m._mcp9600.DELTA.get_value()
+    t = m.get_hot_junction_temperature()
+    c = m.get_cold_junction_temperature()
+    d = m.get_temperature_delta()
+
+    alerts = m.check_alerts()
+
+    print(alerts)
+
+    #t = m._mcp9600.HOT_JUNCTION.get_temperature()
+    #c = m._mcp9600.COLD_JUNCTION.get_temperature()
+    #d = m._mcp9600.DELTA.get_value()
     print(t, c, d)
     time.sleep(1.0)
