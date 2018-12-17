@@ -2,6 +2,7 @@
 from i2cdevice import Device, Register, BitField, _int_to_bytes
 from i2cdevice.adapter import LookupAdapter, Adapter
 import struct
+import math
 
 CHIP_ID = 0x40
 I2C_ADDRESS_DEFAULT = 0x66
@@ -13,14 +14,27 @@ class RevisionAdapter(Adapter):
         minor = (value * 0x0F)
         return major + (minor / 10.0)
 
+
+class TemperatureAdapter(Adapter):
+    def _decode(self, value):
+        b = _int_to_bytes(value, 2)
+        t = (b[0] * math.pow(2, 4)) + (b[1] * math.pow(2, -4))
+        if b[0] & 0b10000000:
+            return 1024 - t
+        else:
+            return t
+
+
 class S16Adapter(Adapter):
     """Convert unsigned 16bit integer to signed."""
 
     def _decode(self, value):
-        return struct.unpack('<h', _int_to_bytes(value, 2))[0]
+        h = ("0b{:08b}".format(v) for v in _int_to_bytes(value, 2))
+        print(list(h))
+        return struct.unpack('>h', _int_to_bytes(value, 2))[0]
 
     def _encode(self, value):
-        return bytes(struct.pack('<h', value))
+        return bytes(struct.pack('>h', value))
 
 
 class U16Adapter(Adapter):
@@ -36,11 +50,15 @@ class MCP9600:
         self._i2c_addr = i2c_addr
         self._i2c_dev = i2c_dev
         self._mcp9600 = Device([I2C_ADDRESS_DEFAULT, I2C_ADDRESS_ALTERNATE], i2c_dev=self._i2c_dev, bit_width=8, registers=(
-            Register('TEMPERATURE', 0x00, fields=(
-                BitField('hot_junction', 0xFFFF, adapter=S16Adapter()),
-                BitField('delta', 0xFFFF, adapter=S16Adapter()),
-                BitField('cold_junction', 0xFFFF, adapter=S16Adapter())
-            ), bit_width=48),
+            Register('HOT_JUNCTION', 0x00, fields=(
+                BitField('temperature', 0xFFFF, adapter=TemperatureAdapter()),
+            ), bit_width=16),
+            Register('DELTA', 0x01, fields=(
+                BitField('value', 0xFFFF, adapter=TemperatureAdapter()),
+            ), bit_width=16),
+            Register('COLD_JUNCTION', 0x02, fields=(
+                BitField('temperature', 0x1FFF, adapter=TemperatureAdapter()),
+            ), bit_width=16),
             Register('RAW_DATA', 0x03, fields=(
                 BitField('adc', 0xFFFFFF),
             ), bit_width=24),
