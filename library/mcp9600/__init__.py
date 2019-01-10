@@ -82,42 +82,42 @@ class MCP9600:
             )),
             Register('THERMOCOUPLE_CONFIG', 0x05, fields=(
                 BitField('type_select', 0b01110000, adapter=LookupAdapter({
-                    0b000: 'K',
-                    0b001: 'J',
-                    0b010: 'T',
-                    0b011: 'N',
-                    0b100: 'S',
-                    0b101: 'E',
-                    0b110: 'B',
-                    0b111: 'R'
+                    'K': 0b000,
+                    'J': 0b001,
+                    'T': 0b010,
+                    'N': 0b011,
+                    'S': 0b100,
+                    'E': 0b101,
+                    'B': 0b110,
+                    'R': 0b111
                 })),
                 BitField('filter_coefficients', 0b00000111)
             )),
             Register('DEVICE_CONFIG', 0x06, fields=(
                 BitField('cold_junction_resolution', 0b10000000, adapter=LookupAdapter({
-                    0b0: 0.0625,
-                    0b1: 0.25
+                    0.0625: 0b0,
+                    0.25: 0b1
                 })),
                 BitField('adc_resolution', 0b01100000, adapter=LookupAdapter({
-                    0b00: 18,
-                    0b01: 16,
-                    0b10: 14,
-                    0b11: 12
+                    18: 0b00,
+                    16: 0b01,
+                    14: 0b10,
+                    12: 0b11
                 })),
                 BitField('burst_mode_samples', 0b00011100, adapter=LookupAdapter({
-                    0b000: 1,
-                    0b001: 2,
-                    0b010: 4,
-                    0b011: 8,
-                    0b100: 16,
-                    0b101: 32,
-                    0b110: 64,
-                    0b111: 128
+                    1: 0b000,
+                    2: 0b001,
+                    4: 0b010,
+                    8: 0b011,
+                    16: 0b100,
+                    32: 0b101,
+                    64: 0b110,
+                    128: 0b111
                 })),
                 BitField('shutdown_modes', 0b00000011, adapter=LookupAdapter({
-                    0b00: 'Normal',
-                    0b01: 'Shutdown',
-                    0b10: 'Burst'
+                    'Normal': 0b00,
+                    'Shutdown': 0b01,
+                    'Burst': 0b10
                 }))
             )),
             Register('ALERT1_CONFIG', 0x08, fields=(
