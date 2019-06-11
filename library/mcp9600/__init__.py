@@ -73,7 +73,7 @@ class i2cWrapper():
             while data[0] == data[1] and time.time() - t_start < self._read_timeout:
                 data = self._i2c.read_i2c_block_data(addr, register, length)
             if time.time() - t_start >= self._read_timeout:
-                raise RuntimeError("Read timeout")
+                raise RuntimeError("MCP900 Read Timeout, register: 0x{:02x}".format(register))
             return data
         else:
             return self._i2c.read_i2c_block_data(addr, register, length)
