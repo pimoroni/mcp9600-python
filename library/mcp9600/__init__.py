@@ -8,9 +8,10 @@ CHIP_ID = 0x40
 I2C_ADDRESS_DEFAULT = 0x66
 I2C_ADDRESS_ALTERNATE = 0x67
 
+
 class RevisionAdapter(Adapter):
     def _decode(self, value):
-        major = (value & 0xF0) >> 4 
+        major = (value & 0xF0) >> 4
         minor = (value * 0x0F)
         return major + (minor / 10.0)
 
@@ -86,8 +87,8 @@ class MCP9600:
         self._i2c_dev = i2c_dev
 
         self._mcp9600 = Device([I2C_ADDRESS_DEFAULT, I2C_ADDRESS_ALTERNATE],
-            i2c_dev=i2cWrapper(1, parent_i2c_bus=i2c_dev, read_timeout=read_timeout),
-            bit_width=8, registers=(
+                               i2c_dev=i2cWrapper(1, parent_i2c_bus=i2c_dev, read_timeout=read_timeout),
+                               bit_width=8, registers=(
             Register('HOT_JUNCTION', 0x00, fields=(
                 BitField('temperature', 0xFFFF, adapter=TemperatureAdapter()),
             ), bit_width=16),
@@ -256,9 +257,9 @@ class MCP9600:
         return self._mcp9600.DELTA.get_value()
 
     def check_alerts(self):
-         """Check status flags of all alert registers."""
-         with self._mcp9600.STATUS as status:
-             return status.get_alert_1(), status.get_alert_2(), status.get_alert_3(), status.get_alert_4()
+        """Check status flags of all alert registers."""
+        with self._mcp9600.STATUS as status:
+            return status.get_alert_1(), status.get_alert_2(), status.get_alert_3(), status.get_alert_4()
 
     def clear_alert(self, index):
         """Clear the interrupt flag on an alert slot.
@@ -302,4 +303,3 @@ class MCP9600:
             alert.set_mode(mode)
             alert.set_enable(1 if enable else 0)
             alert.write()
-

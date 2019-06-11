@@ -3,6 +3,7 @@ import mock
 import pytest
 from i2cdevice import MockSMBus
 
+
 class MockSMBusWorking(MockSMBus):
     def __init__(self, bus):
         MockSMBus.__init__(self, bus)
