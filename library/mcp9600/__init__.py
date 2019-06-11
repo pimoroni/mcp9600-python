@@ -86,7 +86,7 @@ class MCP9600:
         self._i2c_dev = i2c_dev
 
         self._mcp9600 = Device([I2C_ADDRESS_DEFAULT, I2C_ADDRESS_ALTERNATE],
-            i2c_dev=i2cWrapper(0, parent_i2c_bus=i2c_dev, read_timeout=read_timeout),
+            i2c_dev=i2cWrapper(1, parent_i2c_bus=i2c_dev, read_timeout=read_timeout),
             bit_width=8, registers=(
             Register('HOT_JUNCTION', 0x00, fields=(
                 BitField('temperature', 0xFFFF, adapter=TemperatureAdapter()),

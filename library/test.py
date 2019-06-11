@@ -2,6 +2,7 @@ import mcp9600
 import time
 
 m = mcp9600.MCP9600()
+m.setup()
 
 print("Resetting alerts")
 for x in range(1, 5):
@@ -27,4 +28,4 @@ while True:
     print(alerts)
 
     print(t, c, d)
-    time.sleep(1.0)
+    time.sleep(0.5)
