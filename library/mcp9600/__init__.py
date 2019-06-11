@@ -2,14 +2,14 @@
 from i2cdevice import Device, Register, BitField, _int_to_bytes
 from i2cdevice.adapter import LookupAdapter, Adapter
 import struct
-import math
+import time
 
 CHIP_ID = 0x40
 I2C_ADDRESS_DEFAULT = 0x66
 I2C_ADDRESS_ALTERNATE = 0x67
 
 class RevisionAdapter(Adapter):
-   def _decode(self, value):
+    def _decode(self, value):
         major = (value & 0xF0) >> 4 
         minor = (value * 0x0F)
         return major + (minor / 10.0)
@@ -23,15 +23,15 @@ class TemperatureAdapter(Adapter):
 
 
 class AlertLimitAdapter(Adapter):
-     def _decode(self, value):
-         v = struct.unpack('>h', _int_to_bytes(value, 2))[0]
-         return v / 16.0
+    def _decode(self, value):
+        v = struct.unpack('>h', _int_to_bytes(value, 2))[0]
+        return v / 16.0
 
-     def _encode(self, value):
-         v = (value * 4) << 2
-         v = struct.pack('>h', v)
-         v = (ord(v[0]) << 8) | ord(v[1])
-         return v
+    def _encode(self, value):
+        v = (value * 4) << 2
+        v = struct.pack('>h', v)
+        v = (ord(v[0]) << 8) | ord(v[1])
+        return v
 
 
 class S16Adapter(Adapter):
@@ -53,12 +53,41 @@ class U16Adapter(Adapter):
         return struct.unpack('<H', _int_to_bytes(value, 2))[0]
 
 
+class i2cWrapper():
+    def __init__(self, bus, parent_i2c_bus=None, read_timeout=5.0):
+        self._i2c = parent_i2c_bus
+        self._read_timeout = read_timeout
+        if self._i2c is None:
+            import smbus
+            self._i2c = smbus.SMBus(bus)
+
+    def write_i2c_block_data(self, addr, register, values):
+        return self._i2c.write_i2c_block_data(addr, register, values)
+
+    def read_i2c_block_data(self, addr, register, length):
+        # Fix for MCP9600 errata 2
+        # During sequential read for two or more bytes, the first byte may be repeated
+        if length == 2 and register in [0x00, 0x01, 0x02]:
+            data = [0, 0]
+            t_start = time.time()
+            while data[0] == data[1] and time.time() - t_start < self._read_timeout:
+                data = self._i2c.read_i2c_block_data(addr, register, length)
+            if time.time() - t_start >= self._read_timeout:
+                raise RuntimeError("Read timeout")
+            return data
+        else:
+            return self._i2c.read_i2c_block_data(addr, register, length)
+
+
 class MCP9600:
-    def __init__(self, i2c_addr=I2C_ADDRESS_DEFAULT, i2c_dev=None):
+    def __init__(self, i2c_addr=I2C_ADDRESS_DEFAULT, i2c_dev=None, read_timeout=5.0):
         self._is_setup = False
         self._i2c_addr = i2c_addr
         self._i2c_dev = i2c_dev
-        self._mcp9600 = Device([I2C_ADDRESS_DEFAULT, I2C_ADDRESS_ALTERNATE], i2c_dev=self._i2c_dev, bit_width=8, registers=(
+
+        self._mcp9600 = Device([I2C_ADDRESS_DEFAULT, I2C_ADDRESS_ALTERNATE],
+            i2c_dev=i2cWrapper(0, parent_i2c_bus=i2c_dev, read_timeout=read_timeout),
+            bit_width=8, registers=(
             Register('HOT_JUNCTION', 0x00, fields=(
                 BitField('temperature', 0xFFFF, adapter=TemperatureAdapter()),
             ), bit_width=16),
