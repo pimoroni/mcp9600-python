@@ -2,15 +2,15 @@
 from i2cdevice import Device, Register, BitField, _int_to_bytes
 from i2cdevice.adapter import LookupAdapter, Adapter
 import struct
-import math
 
 CHIP_ID = 0x40
 I2C_ADDRESS_DEFAULT = 0x66
 I2C_ADDRESS_ALTERNATE = 0x67
 
+
 class RevisionAdapter(Adapter):
-   def _decode(self, value):
-        major = (value & 0xF0) >> 4 
+    def _decode(self, value):
+        major = (value & 0xF0) >> 4
         minor = (value * 0x0F)
         return major + (minor / 10.0)
 
@@ -23,34 +23,15 @@ class TemperatureAdapter(Adapter):
 
 
 class AlertLimitAdapter(Adapter):
-     def _decode(self, value):
-         v = struct.unpack('>h', _int_to_bytes(value, 2))[0]
-         return v / 16.0
-
-     def _encode(self, value):
-         v = (value * 4) << 2
-         v = struct.pack('>h', v)
-         v = (ord(v[0]) << 8) | ord(v[1])
-         return v
-
-
-class S16Adapter(Adapter):
-    """Convert unsigned 16bit integer to signed."""
-
     def _decode(self, value):
-        h = ("0b{:08b}".format(v) for v in _int_to_bytes(value, 2))
-        print(list(h))
-        return struct.unpack('>h', _int_to_bytes(value, 2))[0]
+        v = struct.unpack('>h', _int_to_bytes(value, 2))[0]
+        return v / 16.0
 
     def _encode(self, value):
-        return bytes(struct.pack('>h', value))
-
-
-class U16Adapter(Adapter):
-    """Convert from bytes to an unsigned 16bit integer."""
-
-    def _decode(self, value):
-        return struct.unpack('<H', _int_to_bytes(value, 2))[0]
+        v = int(value * 4) << 2
+        v = struct.pack('>h', v)
+        v = (ord(v[0]) << 8) | ord(v[1])
+        return v
 
 
 class MCP9600:
@@ -183,53 +164,52 @@ class MCP9600:
         ))
 
         self.alert_registers = [
-            self._mcp9600.ALERT1_CONFIG,
-            self._mcp9600.ALERT2_CONFIG,
-            self._mcp9600.ALERT3_CONFIG,
-            self._mcp9600.ALERT4_CONFIG
+            'ALERT1_CONFIG',
+            'ALERT2_CONFIG',
+            'ALERT3_CONFIG',
+            'ALERT4_CONFIG'
         ]
         self.alert_limits = [
-            self._mcp9600.ALERT1_LIMIT,
-            self._mcp9600.ALERT2_LIMIT,
-            self._mcp9600.ALERT3_LIMIT,
-            self._mcp9600.ALERT4_LIMIT
+            'ALERT1_LIMIT',
+            'ALERT2_LIMIT',
+            'ALERT3_LIMIT',
+            'ALERT4_LIMIT'
         ]
         self.alert_hysteresis = [
-            self._mcp9600.ALERT1_HYSTERESIS,
-            self._mcp9600.ALERT2_HYSTERESIS,
-            self._mcp9600.ALERT3_HYSTERESIS,
-            self._mcp9600.ALERT4_HYSTERESIS
+            'ALERT1_HYSTERESIS',
+            'ALERT2_HYSTERESIS',
+            'ALERT3_HYSTERESIS',
+            'ALERT4_HYSTERESIS'
         ]
-
-    def setup(self):
-        if self._is_setup:
-            return
-        self._is_setup = True
 
         self._mcp9600.select_address(self._i2c_addr)
 
         try:
-            if self._mcp9600.CHIP_ID.get_id() != CHIP_ID:
-                raise RuntimeError("Unable to find mcp9600 on 0x{:02x}, CHIP_ID returned {:02x}".format(self._i2c_addr, self._mcp9600.CHIP_ID.get_id()))
+            chip = self._mcp9600.get('CHIP_ID')
+            if chip.id != CHIP_ID:
+                raise RuntimeError("Unable to find mcp9600 on 0x{:02x}, CHIP_ID returned {:02x}".format(self._i2c_addr, chip.id))
         except IOError:
             raise RuntimeError("Unable to find mcp9600 on 0x{:02x}, IOError".format(self._i2c_addr))
 
+    def setup(self):
+        pass
+
     def get_hot_junction_temperature(self):
         """Return the temperature measured by the attached thermocouple."""
-        return self._mcp9600.HOT_JUNCTION.get_temperature()
+        return self._mcp9600.get('HOT_JUNCTION').temperature
 
     def get_cold_junction_temperature(self):
         """Return the temperature measured by the onboard sensor."""
-        return self._mcp9600.COLD_JUNCTION.get_temperature()
+        return self._mcp9600.get('COLD_JUNCTION').temperature
 
     def get_temperature_delta(self):
         """Return the difference between hot and cold junction temperatures."""
-        return self._mcp9600.DELTA.get_value()
+        return self._mcp9600.get('DELTA').value
 
     def check_alerts(self):
-         """Check status flags of all alert registers."""
-         with self._mcp9600.STATUS as status:
-             return status.get_alert_1(), status.get_alert_2(), status.get_alert_3(), status.get_alert_4()
+        """Check status flags of all alert registers."""
+        status = self._mcp9600.get('STATUS')
+        return status.alert_1, status.alert_2, status.alert_3, status.alert_4
 
     def clear_alert(self, index):
         """Clear the interrupt flag on an alert slot.
@@ -237,8 +217,15 @@ class MCP9600:
         :param index: Index of alert to clear, from 1 to 4
 
         """
-        register = self.alert_registers[index - 1]
-        register.set_clear_interrupt(1)
+        self._mcp9600.set(self.alert_registers[index - 1], clear_interrupt=1)
+
+    def get_alert_hysteresis(self, index):
+        alert_hysteresis = self.alert_hysteresis[index - 1]
+        return self._mcp9600.get(alert_hysteresis).value
+
+    def get_alert_limit(self, index):
+        alert_limit = self.alert_limits[index - 1]
+        return self._mcp9600.get(alert_limit).value
 
     def configure_alert(self, index, limit=None, hysteresis=None, clear_interrupt=True, monitor_junction=0, rise_fall=1, state=1, mode=1, enable=False):
         """Set up one of the 4 alert slots.
@@ -258,19 +245,16 @@ class MCP9600:
 
         if limit is not None:
             alert_limit = self.alert_limits[index - 1]
-            alert_limit.set_value(limit)
+            self._mcp9600.set(alert_limit, value=limit)
 
         if hysteresis is not None:
             alert_hysteresis = self.alert_hysteresis[index - 1]
-            alert_hysteresis.set_value(hysteresis)
+            self._mcp9600.set(alert_hysteresis, value=hysteresis)
 
-        with alert_register as alert:
-            if clear_interrupt:
-                alert.set_clear_interrupt(1)
-            alert.set_monitor_junction(monitor_junction)
-            alert.set_rise_fall(rise_fall)
-            alert.set_state(state)
-            alert.set_mode(mode)
-            alert.set_enable(1 if enable else 0)
-            alert.write()
-
+        self._mcp9600.set(alert_register,
+                          clear_interrupt=1 if clear_interrupt else 0,
+                          monitor_junction=monitor_junction,
+                          rise_fall=rise_fall,
+                          state=state,
+                          mode=mode,
+                          enable=1 if enable else 0)
