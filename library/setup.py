@@ -39,7 +39,7 @@ classifiers = ['Development Status :: 4 - Beta',
 
 setup(
     name='mcp9600',
-    version='0.0.1',
+    version='0.0.3',
     author='Philip Howard',
     author_email='phil@pimoroni.com',
     description="""Python library for the MCP9600 thermocouple temperature sensor""",
@@ -49,5 +49,5 @@ setup(
     url='http://www.pimoroni.com',
     classifiers=classifiers,
     packages=['mcp9600'],
-    install_requires=['i2cdevice>=0.0.4']
+    install_requires=['i2cdevice>=0.0.6']
 )
