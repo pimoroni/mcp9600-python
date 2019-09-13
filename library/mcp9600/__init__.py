@@ -32,7 +32,10 @@ class AlertLimitAdapter(Adapter):
     def _encode(self, value):
         v = int(value * 4) << 2
         v = struct.pack('>h', v)
-        v = (ord(v[0]) << 8) | ord(v[1])
+        try:
+            v = v[0] << 8 | v[1]
+        except TypeError:
+            v = ord(v[0]) << 8 | ord(v[1])
         return v
 
 

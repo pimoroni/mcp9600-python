@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import mcp9600
 import time
 
@@ -21,10 +22,11 @@ while True:
     alerts = m.check_alerts()
 
     for x in range(1, 5):
-        if alerts[x-1] == 1:
+        if alerts[x - 1] == 1:
             m.clear_alert(x)
 
     print(alerts)
 
     print(t, c, d)
+
     time.sleep(1.0)
