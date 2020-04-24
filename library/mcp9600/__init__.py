@@ -6,6 +6,7 @@ import struct
 __version__ = '0.0.3'
 
 CHIP_ID = 0x40
+I2C_ADDRESSES = list(range(0x60, 0x68))
 I2C_ADDRESS_DEFAULT = 0x66
 I2C_ADDRESS_ALTERNATE = 0x67
 
@@ -44,7 +45,7 @@ class MCP9600:
         self._is_setup = False
         self._i2c_addr = i2c_addr
         self._i2c_dev = i2c_dev
-        self._mcp9600 = Device([I2C_ADDRESS_DEFAULT, I2C_ADDRESS_ALTERNATE], i2c_dev=self._i2c_dev, bit_width=8, registers=(
+        self._mcp9600 = Device(I2C_ADDRESSES, i2c_dev=self._i2c_dev, bit_width=8, registers=(
             Register('HOT_JUNCTION', 0x00, fields=(
                 BitField('temperature', 0xFFFF, adapter=TemperatureAdapter()),
             ), bit_width=16),
