@@ -200,6 +200,22 @@ class MCP9600:
     def setup(self):
         pass
 
+    def set_thermocouple_type(self, thermocouple_type):
+        """Set the type of thermocouple connected to the MCP9600.
+
+        :param thermocouple_type: One of 'K', 'J', 'T', 'N', 'S', 'E', 'B' or 'R'
+
+        """
+        self._mcp9600.set('THERMOCOUPLE_CONFIG', type_select=thermocouple_type)
+
+    def get_thermocouple_type(self):
+        """Get the type of thermocouple connected to the MCP9600.
+
+        Returns one of 'K', 'J', 'T', 'N', 'S', 'E', 'B' or 'R'
+
+        """
+        return self._mcp9600.get('THERMOCOUPLE_CONFIG').type_select
+
     def get_hot_junction_temperature(self):
         """Return the temperature measured by the attached thermocouple."""
         return self._mcp9600.get('HOT_JUNCTION').temperature

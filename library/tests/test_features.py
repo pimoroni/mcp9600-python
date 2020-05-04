@@ -74,3 +74,27 @@ def test_alert_clear():
     device.clear_alert(1)
 
     assert smbus.regs[0x08] & 0b10000000 == 0b10000000
+
+
+def test_set_thermocouple_type():
+    import mcp9600
+    smbus = MockSMBus(1, default_registers={
+        0x04: 0b00000101,
+        0x05: 0b00000000,
+        0x20: 0x40})
+    device = mcp9600.MCP9600(i2c_dev=smbus)
+
+    device.set_thermocouple_type('N')
+
+    assert (smbus.regs[0x05] >> 4) & 0b111 == 0b011
+
+
+def test_get_thermocouple_type():
+    import mcp9600
+    smbus = MockSMBus(1, default_registers={
+        0x04: 0b00000101,
+        0x05: 0b00110000,
+        0x20: 0x40})
+    device = mcp9600.MCP9600(i2c_dev=smbus)
+
+    assert device.get_thermocouple_type() == 'N'
