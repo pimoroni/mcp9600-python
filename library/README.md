@@ -22,6 +22,11 @@ Latest/development library from GitHub:
 
 # Changelog
 
+0.0.4
+-----
+
+* Add set/get for thermocouple type
+
 0.0.3
 -----
 
