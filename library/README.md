@@ -10,13 +10,13 @@
 
 Stable library from PyPi:
 
-* Just run `sudo pip install mcp9600`
+* Just run `python3 -m pip install mcp9600`
 
 Latest/development library from GitHub:
 
 * `git clone https://github.com/pimoroni/mcp9600-python`
 * `cd mcp9600-python`
-* `sudo ./install.sh`
+* `sudo ./install.sh --unstable`
 
 
 
