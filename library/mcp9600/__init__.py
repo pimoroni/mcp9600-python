@@ -6,6 +6,7 @@ import struct
 __version__ = '0.0.4'
 
 CHIP_ID = 0x40
+CHIP_ID2 = 0x41
 I2C_ADDRESSES = list(range(0x60, 0x68))
 I2C_ADDRESS_DEFAULT = 0x66
 I2C_ADDRESS_ALTERNATE = 0x67
@@ -61,6 +62,7 @@ class MCP9600:
             Register('STATUS', 0x04, fields=(
                 BitField('burst_complete', 0b10000000),
                 BitField('updated', 0b01000000),
+                BitField('short_circuit', 0b00100000),
                 BitField('input_range', 0b00010000),
                 BitField('alert_4', 0b00001000),
                 BitField('alert_3', 0b00000100),
@@ -192,7 +194,7 @@ class MCP9600:
 
         try:
             chip = self._mcp9600.get('CHIP_ID')
-            if chip.id != CHIP_ID:
+            if chip.id != CHIP_ID and chip.id != CHIP_ID2:
                 raise RuntimeError("Unable to find mcp9600 on 0x{:02x}, CHIP_ID returned {:02x}".format(self._i2c_addr, chip.id))
         except IOError:
             raise RuntimeError("Unable to find mcp9600 on 0x{:02x}, IOError".format(self._i2c_addr))
@@ -227,6 +229,18 @@ class MCP9600:
     def get_temperature_delta(self):
         """Return the difference between hot and cold junction temperatures."""
         return self._mcp9600.get('DELTA').value
+
+    def is_shorted(self):
+        """Check if status flag indicates if tc is shorted"""
+        status = self._mcp9600.get('STATUS')
+        return status.short_circuit
+
+    def is_in_range(self):
+        status = self._mcp9600.get('STATUS')
+        return status.input_range
+
+    def is_disconnected(self):
+        return self.is_in_range()
 
     def check_alerts(self):
         """Check status flags of all alert registers."""
