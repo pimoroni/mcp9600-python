@@ -1,7 +1,8 @@
 """MCP9600 Driver."""
-from i2cdevice import Device, Register, BitField, _int_to_bytes
-from i2cdevice.adapter import LookupAdapter, Adapter
 import struct
+
+from i2cdevice import BitField, Device, Register, _int_to_bytes
+from i2cdevice.adapter import Adapter, LookupAdapter
 
 __version__ = '0.0.4'
 

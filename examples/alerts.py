@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import mcp9600
 import time
+
+import mcp9600
 
 m = mcp9600.MCP9600()
 

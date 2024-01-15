@@ -1,5 +1,5 @@
-from i2cdevice import MockSMBus
 import pytest
+from i2cdevice import MockSMBus
 
 
 def test_setup():
