@@ -29,7 +29,7 @@ def test_setup_no_device():
 
 
 def test_legacy_setup():
-    # Test a stub setup function exists despite it being depricated
+    # Test a stub setup function exists despite it being deprecated
     import mcp9600
     device = mcp9600.MCP9600(i2c_dev=MockSMBus(1, default_registers={0x20: 0x40}))
     device.setup()
