@@ -1,4 +1,3 @@
 [run]
-source = mcp9600
 omit =
     .tox/*
