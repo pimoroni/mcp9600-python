@@ -78,7 +78,16 @@ class MCP9600:
                     'B': 0b110,
                     'R': 0b111
                 })),
-                BitField('filter_coefficients', 0b00000111)
+                BitField('filter_coefficients', 0b00000111, adapter=LookupAdapter({
+                    0: 0b000,
+                    1: 0b001,
+                    2: 0b010,
+                    3: 0b011,
+                    4: 0b100,
+                    5: 0b101,
+                    6: 0b110,
+                    7: 0b111,
+                })),
             )),
             Register('DEVICE_CONFIG', 0x06, fields=(
                 BitField('cold_junction_resolution', 0b10000000, adapter=LookupAdapter({
